@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import { Route, Switch, useParams } from "react-router";
-import { useLocation } from "react-router-dom";
+import { Route, Switch, useParams, useRouteMatch } from "react-router";
+import { Link, useLocation } from "react-router-dom";
 import styled from "styled-components";
 import Price from "./Price";
 import Chart from "./Chart";
@@ -61,6 +61,28 @@ const OverviewItem = styled.div`
 
 const Description = styled.p`
   margin: 20px 0px;
+`;
+
+const Tabs = styled.div`
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  margin: 25px 0px;
+  gap: 10px;
+`;
+
+const Tab = styled.span<{ isActive: boolean }>`
+  text-align: center;
+  text-transform: uppercase;
+  font-size: 12px;
+  font-weight: 400;
+  background-color: rgba(0, 0, 0, 0.5);
+  padding: 7px 0px;
+  border-radius: 10px;
+  color: ${(props) =>
+    props.isActive ? props.theme.accentColor : props.theme.textColor};
+  a {
+    display: block;
+  }
 `;
 
 interface InfoData {
@@ -125,6 +147,12 @@ function Coin() {
   const { state } = useLocation<RouteState>();
   const [info, setInfo] = useState<InfoData>();
   const [priceInfo, setPriceInfo] = useState<PriceData>();
+  const priceMatch = useRouteMatch("/:coinId/price");
+  const chartMatch = useRouteMatch("/:coinId/chart");
+  // useRouterMatch Hook
+  // > 현재 접근된 URL이 해당 설정된 패턴과 맞으면 Object return
+  // > 다르면, null을 return
+  console.log(priceMatch);
 
   useEffect(() => {
     (async () => {
@@ -176,6 +204,19 @@ function Coin() {
               <span>{priceInfo?.max_supply}</span>
             </OverviewItem>
           </Overview>
+
+          <Tabs>
+            <Tab isActive={chartMatch !== null}>
+              <Link to={`/${coinId}/chart`}>Chart</Link>
+            </Tab>
+            <Tab isActive={priceMatch !== null}>
+              <Link to={`/${coinId}/price`}>Price</Link>
+            </Tab>
+          </Tabs>
+
+          {/*  switch 부분은 url이 변경되면 실제로 redering 해주는 부분
+          url을  변경해서 내용을 바꾸듯이, 탭을 눌러서 Switch에 등록된 url로 접속해주는 역할 필요
+          => Link가 그 탭 역할을 수행 */}
           <Switch>
             <Route path={`/${coinId}/price`}>
               <Price />
