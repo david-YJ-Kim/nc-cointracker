@@ -168,6 +168,9 @@ function Coin() {
    * > 이를 방지하기 위해서, unique key가 array를 지원하니, array 앞에 키를 추가한 경우임
    * # 변수 이름: 두개의 react-query를 수행하니, 변수명이 동일하게 설정됨
    * > 이를 방지하기 위해서 isLoading:infoLoading 처럼 기본 변수명에 새로운 이름을 설정 가능
+   * # argument 존재 fetcher 호출 방법
+   * > 익명 메소드 하나 호출하고 => (), 그 뒤에 실제 메소드를 호출 fetchCoinTikcers(conId)
+   * > query가 익명 메소드 호출 후 필요한 시기에 실제 메소드를 호출 할 수 있도록
    */
 
   const loading = infoLoading || tickersLoading;
