@@ -4,6 +4,8 @@ import { Link, useLocation } from "react-router-dom";
 import styled from "styled-components";
 import Price from "./Price";
 import Chart from "./Chart";
+import { fetchCoinInfo, fetchCoinTickers } from "../api";
+import { useQuery } from "react-query";
 
 interface RouteParams {
   coinId: string;
@@ -142,37 +144,38 @@ interface PriceData {
 }
 
 function Coin() {
-  const [loading, setLoading] = useState(true);
   const { coinId } = useParams<RouteParams>();
   const { state } = useLocation<RouteState>();
-  const [info, setInfo] = useState<InfoData>();
-  const [priceInfo, setPriceInfo] = useState<PriceData>();
+  /**
+   * useRouterMatch Hook
+   * > 현재 접근된 URL이 해당 설정된 패턴과 맞으면 Object return
+   * > 다르면, null을 return
+   */
   const priceMatch = useRouteMatch("/:coinId/price");
   const chartMatch = useRouteMatch("/:coinId/chart");
-  // useRouterMatch Hook
-  // > 현재 접근된 URL이 해당 설정된 패턴과 맞으면 Object return
-  // > 다르면, null을 return
-  console.log(priceMatch);
 
-  useEffect(() => {
-    (async () => {
-      const infoData = await (
-        await fetch(`https://api.coinpaprika.com/v1/coins/${coinId}`)
-      ).json();
-      const priceData = await (
-        await fetch(`https://api.coinpaprika.com/v1/tickers/${coinId}`)
-      ).json();
-      setInfo(infoData);
-      setPriceInfo(priceData);
-      setLoading(false);
-    })();
-  }, []);
+  const { isLoading: infoLoading, data: infoData } = useQuery<InfoData>(
+    ["info", coinId],
+    () => fetchCoinInfo(coinId)
+  );
+  const { isLoading: tickersLoading, data: tickersData } = useQuery<PriceData>(
+    ["ticker", coinId],
+    () => fetchCoinTickers(coinId)
+  );
+  /**
+   * useQuery
+   * # uniqure key : key를 통해서 query가 데이터를 가져오는데, 지금은 coinId가 중복 키로 잡혀져 있음
+   * > 이를 방지하기 위해서, unique key가 array를 지원하니, array 앞에 키를 추가한 경우임
+   * # 변수 이름: 두개의 react-query를 수행하니, 변수명이 동일하게 설정됨
+   * > 이를 방지하기 위해서 isLoading:infoLoading 처럼 기본 변수명에 새로운 이름을 설정 가능
+   */
 
+  const loading = infoLoading || tickersLoading;
   return (
     <Container>
       <Header>
         <Title>
-          {state?.name ? state.name : loading ? "Loading..." : info?.name}
+          {state?.name ? state.name : loading ? "Loading..." : infoData?.name}
         </Title>
       </Header>
       {loading ? (
@@ -182,26 +185,26 @@ function Coin() {
           <Overview>
             <OverviewItem>
               <span>Rank:</span>
-              <span>{info?.rank}</span>
+              <span>{infoData?.rank}</span>
             </OverviewItem>
             <OverviewItem>
               <span>Symbol:</span>
-              <span>{info?.symbol}</span>
+              <span>{infoData?.symbol}</span>
             </OverviewItem>
             <OverviewItem>
               <span>Open Source:</span>
-              <span>{info?.open_source ? "Yes" : "No"}</span>
+              <span>{infoData?.open_source ? "Yes" : "No"}</span>
             </OverviewItem>
           </Overview>
-          <Description>{info?.description}</Description>
+          <Description>{infoData?.description}</Description>
           <Overview>
             <OverviewItem>
               <span>Total Suply:</span>
-              <span>{priceInfo?.total_supply}</span>
+              <span>{tickersData?.total_supply}</span>
             </OverviewItem>
             <OverviewItem>
               <span>Supply:</span>
-              <span>{priceInfo?.max_supply}</span>
+              <span>{tickersData?.max_supply}</span>
             </OverviewItem>
           </Overview>
 
