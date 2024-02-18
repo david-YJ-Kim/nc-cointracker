@@ -6,6 +6,7 @@ import Price from "./Price";
 import Chart from "./Chart";
 import { fetchCoinInfo, fetchCoinTickers } from "../api";
 import { useQuery } from "react-query";
+import { Helmet } from "react-helmet";
 
 interface RouteParams {
   coinId: string;
@@ -160,22 +161,38 @@ function Coin() {
   );
   const { isLoading: tickersLoading, data: tickersData } = useQuery<PriceData>(
     ["ticker", coinId],
-    () => fetchCoinTickers(coinId)
+    () => fetchCoinTickers(coinId),
+    {
+      refetchInterval: 5000,
+    }
   );
   /**
    * useQuery
    * # uniqure key : key를 통해서 query가 데이터를 가져오는데, 지금은 coinId가 중복 키로 잡혀져 있음
    * > 이를 방지하기 위해서, unique key가 array를 지원하니, array 앞에 키를 추가한 경우임
+   *
    * # 변수 이름: 두개의 react-query를 수행하니, 변수명이 동일하게 설정됨
    * > 이를 방지하기 위해서 isLoading:infoLoading 처럼 기본 변수명에 새로운 이름을 설정 가능
+   *
    * # argument 존재 fetcher 호출 방법
    * > 익명 메소드 하나 호출하고 => (), 그 뒤에 실제 메소드를 호출 fetchCoinTikcers(conId)
    * > query가 익명 메소드 호출 후 필요한 시기에 실제 메소드를 호출 할 수 있도록
+   *
+   * # Interval fetch
+   * > refetchInterval 설정하면 주기적으로 api fetch 해서 업데이트 진행
    */
 
   const loading = infoLoading || tickersLoading;
   return (
     <Container>
+      <Helmet>
+        <title>
+          {state?.name ? state.name : loading ? "Loading..." : infoData?.name}
+        </title>
+      </Helmet>
+      {/* Helmet으로 html head 정보를 페이지 별로 변경할 수 있다. 
+        html의 head로 바로 가는 것으로 link 이기에 다양한게 변경 가능
+      */}
       <Header>
         <Title>
           {state?.name ? state.name : loading ? "Loading..." : infoData?.name}
@@ -195,8 +212,8 @@ function Coin() {
               <span>{infoData?.symbol}</span>
             </OverviewItem>
             <OverviewItem>
-              <span>Open Source:</span>
-              <span>{infoData?.open_source ? "Yes" : "No"}</span>
+              <span>Price:</span>
+              <span>{tickersData?.quotes.USD.price.toFixed(2)}</span>
             </OverviewItem>
           </Overview>
           <Description>{infoData?.description}</Description>
